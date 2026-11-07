@@ -12,7 +12,7 @@ EDC_URL = "https://www.edc.dk/lejebolig/lejlighed/koebenhavn/?side={}"
 PN = r"\b(\d{4})\s+(?:København|Frederiksberg|Valby)"
 
 def postnr_ok(p):
-    return 1000 <= p <= 1999 or p in (2000, 2100, 2200, 2300, 2500)
+    return 1000 <= p <= 1999 or p in (2000, 2100, 2200, 2300, 2500, 2150)
 
 def tal(m):
     return int(m.group(1).replace(".", "")) if m else None
