@@ -3,8 +3,8 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 
 NTFY_TOPIC = os.environ.get("NTFY_TOPIC")
-MAX_HUSLEJE = 13000
-MIN_VAERELSER = 2
+MAX_HUSLEJE = 30000
+MIN_VAERELSER = 4
 SEEN = Path("seen.json")
 HEADERS = {"User-Agent": "Mozilla/5.0 (privat boligagent)"}
 URL = "https://kereby.dk/bolig/"
