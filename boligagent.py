@@ -84,8 +84,49 @@ def hent_edc():
                 "ledig": not ("Reserveret" in t or "Udlejet" in t),
             })
     return opslag
+# ---------- Kilde 3: City Apartment ----------
+CITY_URL = "https://cityapartment.dk/da/lejeboliger-koebenhavn/"
 
-KILDER = [("Kereby", hent_kereby), ("EDC", hent_edc)]
+def hent_city():
+    soup = BeautifulSoup(
+        requests.get(CITY_URL, headers=HEADERS, timeout=20).text, "html.parser")
+    opslag, set_ = [], set()
+    for node in soup.find_all(string=re.compile(r"DKK\s*/\s*pr\.\s*måned")):
+        el, kort = node.parent, None
+        for _ in range(10):
+            if el is None:
+                break
+            t = el.get_text(" ", strip=True)
+            if len(re.findall(r"DKK\s*/\s*pr\.", t)) > 1:
+                break
+            if "Post nr" in t and "værelses" in t:
+                kort = el
+            el = el.parent
+        if kort is None:
+            continue
+        t = kort.get_text(" ", strip=True)
+        a = (kort.select_one('h3 a[href*="/cityapartments/"]')
+             or kort.select_one('a[href*="/cityapartments/"]'))
+        titel = a.get_text(" ", strip=True) if a else "City Apartment"
+        link = requests.compat.urljoin(CITY_URL, a["href"]) if a else CITY_URL
+        pn = re.search(r"Post nr\.\s*(\d{4})", t)
+        husleje = tal(re.search(r"([\d.]+)\s*DKK", t))
+        vaerelser = tal(re.search(r"(\d+)-værelses", t))
+        m2 = tal(re.search(r"(\d+)\s*m²", t))
+        postnr = int(pn.group(1)) if pn else None
+        noegle = "city-" + link.rstrip("/").split("/")[-1]
+        if noegle in set_:
+            continue
+        set_.add(noegle)
+        opslag.append({
+            "id": noegle, "url": link,
+            "tekst": f"{titel}, {postnr}: {vaerelser} vær., {m2} m², {husleje} kr./md.",
+            "husleje": husleje, "vaerelser": vaerelser, "postnr": postnr,
+            "ledig": not ("Reserveret" in t or "Udlejet" in t),
+        })
+    return opslag
+    
+KILDER = [("Kereby", hent_kereby), ("EDC", hent_edc), ("City Apartment", hent_city)]
 
 def matcher(o):
     return bool(o["ledig"]
